@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quiz România — Județe & Reședințe</title>
+<meta name="theme-color" content="#2563eb">
+<meta name="description" content="Joc de geografie despre județele și reședințele României.">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  :root{--bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#657089;--accent:#2563eb;--good:#16a34a;--bad:#dc2626;--line:#dbe3ef}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:linear-gradient(135deg,#eef4ff,#f8fafc);color:var(--ink)}
+  .wrap{max-width:1180px;margin:0 auto;padding:24px}
+  header{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:18px;flex-wrap:wrap}
+  h1{margin:0;font-size:clamp(25px,4vw,38px)}
+  .sub{color:var(--muted);margin-top:5px}
+  .stats{display:flex;gap:10px;flex-wrap:wrap}
+  .pill{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:9px 14px;font-weight:700;box-shadow:0 4px 16px #00000008}
+  .layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.7fr);gap:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:0 12px 35px #16335f12;overflow:hidden}
+  .mapcard{min-height:650px;display:flex;flex-direction:column}
+  .maptop{padding:18px 20px 10px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .question{font-size:22px;font-weight:800}
+  .map{flex:1;min-height:540px;position:relative}
+  svg{width:100%;height:100%;display:block}
+  .county{fill:#dbeafe;stroke:#fff;stroke-width:1.2;cursor:pointer;transition:.15s}
+  .county:hover{fill:#93c5fd;filter:drop-shadow(0 3px 3px #0002)}
+  .county.target{fill:#ffdf00 !important;stroke:#111827 !important;stroke-width:5 !important;animation:pulse 1s infinite;filter:drop-shadow(0 0 12px #f59e0b)}
+  .county.correct{fill:#86efac}
+  .county.wrong{fill:#fca5a5}
+  @keyframes pulse{50%{filter:drop-shadow(0 0 8px #f59e0b)}}
+  .map-label{font-weight:800;fill:#14532d;stroke:white;stroke-width:3px;paint-order:stroke;pointer-events:none}
+  .map-label.small{font-size:11px}
+  .map-label.capital{font-size:10px;fill:#166534}
+  .county.correct{fill:#86efac !important;stroke:#166534 !important;stroke-width:4 !important}
+  .panel{padding:22px}
+  .modebox{display:grid;gap:10px}
+  .modebtn,.restart{border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px 14px;text-align:left;font-weight:750;cursor:pointer}
+  .modebtn.active{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
+  .inputrow{display:flex;gap:8px;margin-top:16px}
+  input{min-width:0;flex:1;border:1px solid #cbd5e1;border-radius:14px;padding:13px 14px;font-size:16px;outline:none}
+  input:focus{border-color:#60a5fa;box-shadow:0 0 0 3px #3b82f620}
+  button.primary{border:0;background:var(--accent);color:#fff;border-radius:14px;padding:13px 17px;font-weight:800;cursor:pointer}
+  button.primary:disabled{opacity:.5;cursor:not-allowed}
+  .feedback{min-height:56px;margin-top:14px;border-radius:14px;padding:12px 14px;background:#f8fafc;color:var(--muted)}
+  .feedback.good{background:#f0fdf4;color:#166534}.feedback.bad{background:#fef2f2;color:#991b1b}
+  .next{width:100%;margin-top:10px}
+  .help{font-size:13px;color:var(--muted);line-height:1.5;margin-top:14px}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--muted)}
+  .dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px}
+  .loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-weight:700}
+  .source{font-size:11px;color:#8792a8;margin-top:12px}
+  @media(max-width:850px){.layout{grid-template-columns:1fr}.mapcard{min-height:520px}.map{min-height:430px}}
+  @media(max-width:520px){.wrap{padding:14px}.header{align-items:flex-start}.stats{width:100%;gap:7px}.pill{flex:1;text-align:center;padding:8px 7px;font-size:13px}.mapcard{min-height:470px}.map{min-height:380px}.panel{padding:17px}.modebtn,.restart,button.primary{min-height:46px}.inputrow{flex-wrap:wrap}.inputrow input{flex:1 1 100%}.inputrow button{width:100%}.question{font-size:19px}.maptop{padding:15px 16px 8px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>🇷🇴 Quiz România</h1><div class="sub">Județe și reședințe de județ — învață jucându-te.</div></div>
+  <div class="stats">
+    <div class="pill">Scor: <span id="score">0</span></div>
+    <div class="pill">Serie: <span id="streak">0</span> 🔥</div>
+    <div class="pill">Întrebări: <span id="count">0</span>/42</div>
+  </div>
+</header>
+
+<div class="layout">
+  <section class="card mapcard">
+    <div class="maptop">
+      <div class="question" id="question">Se încarcă harta…</div>
+      <div class="legend"><span><i class="dot" style="background:#fbbf24"></i>județul cerut</span><span><i class="dot" style="background:#86efac"></i>corect</span></div>
+    </div>
+    <div class="map" id="map"><div class="loading" id="loading">Se încarcă harta României…</div></div>
+  </section>
+
+  <aside class="card panel">
+    <h2 style="margin-top:0">Cum vrei să joci?</h2>
+    <div class="modebox">
+      <button class="modebtn active" data-mode="county">🗺️ Arată județul → eu spun numele</button>
+      <button class="modebtn" data-mode="capital">🏙️ Arată județul → eu spun reședința</button>
+      <button class="modebtn" data-mode="mixed">🎲 Mod mixt</button>
+      <button class="modebtn" data-mode="both">✍️ Scriu județul + reședința</button>
+    </div>
+
+    <div class="inputrow" id="answerRow">
+      <input id="answer" autocomplete="off" placeholder="Scrie răspunsul…">
+      <input id="answer2" autocomplete="off" placeholder="Scrie reședința…" style="display:none">
+      <button class="primary" id="check">Verifică</button>
+    </div>
+    <div class="feedback" id="feedback">Alege modul de joc și începe. Poți folosi sau nu diacritice.</div>
+    <button class="primary next" id="next" disabled>Următoarea întrebare →</button>
+    <button class="restart" id="restart" style="width:100%;margin-top:8px">↻ Reîncepe jocul</button>
+
+    <div class="help">
+      <b>Regulă:</b> ai 42 de întrebări, câte una pentru fiecare județ + București.
+      Răspunsurile sunt verificate fără să țină cont de majuscule sau diacritice.
+      Dacă greșești, poți încerca din nou.
+    </div>
+    <div class="source">Harta folosește date GeoJSON publice; jocul și lista reședințelor sunt incluse în această pagină.</div>
+  </aside>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script>
+const DATA_URL = "https://raw.githubusercontent.com/brechtv/looker_map_layers/master/romania-counties.json";
+
+const counties = [
+["Alba","Alba Iulia"],["Arad","Arad"],["Argeș","Pitești"],["Bacău","Bacău"],
+["Bihor","Oradea"],["Bistrița-Năsăud","Bistrița"],["Botoșani","Botoșani"],["Brăila","Brăila"],
+["Brașov","Brașov"],["București","București"],["Buzău","Buzău"],["Călărași","Călărași"],
+["Caraș-Severin","Reșița"],["Cluj","Cluj-Napoca"],["Constanța","Constanța"],["Covasna","Sfântu Gheorghe"],
+["Dâmbovița","Târgoviște"],["Dolj","Craiova"],["Galați","Galați"],["Giurgiu","Giurgiu"],
+["Gorj","Târgu Jiu"],["Harghita","Miercurea Ciuc"],["Hunedoara","Deva"],["Ialomița","Slobozia"],
+["Iași","Iași"],["Ilfov","București"],["Maramureș","Baia Mare"],["Mehedinți","Drobeta-Turnu Severin"],
+["Mureș","Târgu Mureș"],["Neamț","Piatra Neamț"],["Olt","Slatina"],["Prahova","Ploiești"],
+["Sălaj","Zalău"],["Satu Mare","Satu Mare"],["Sibiu","Sibiu"],["Suceava","Suceava"],
+["Teleorman","Alexandria"],["Timiș","Timișoara"],["Tulcea","Tulcea"],["Vâlcea","Râmnicu Vâlcea"],
+["Vaslui","Vaslui"],["Vrancea","Focșani"]
+].map(([county,capital])=>({county,capital}));
+
+const norm=s=>String(s||"")
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g,"")
+  .replace(/[ăâ]/gi,"a")
+  .replace(/[î]/gi,"i")
+  .replace(/[șş]/gi,"s")
+  .replace(/[țţ]/gi,"t")
+  .toLowerCase()
+  .replace(/[^a-z0-9]/g,"");
+
+const acceptedAnswers = {
+  "maramures":["maramures","MARAMURES","Maramureș","Maramures"],
+  "bistritanasaud":["bistritanasaud","Bistrița-Năsăud","Bistrita Nasaud","Bistrita-Nasaud"],
+  "carasseverin":["carasseverin","Caraș-Severin","Caras Severin","Caras-Severin"],
+  "clujnapoca":["clujnapoca","Cluj-Napoca","Cluj Napoca"],
+  "drobataturnuseverin":["drobataturnuseverin","Drobeta-Turnu Severin","Drobeta Turnu Severin"],
+  "sfantugheorghe":["sfantugheorghe","Sfântu Gheorghe","Sfantu Gheorghe"],
+  "targumures":["targumures","Târgu Mureș","Targu Mures"],
+  "targujiu":["targujiu","Târgu Jiu","Targu Jiu"],
+  "ramnicuvalcea":["ramnicuvalcea","Râmnicu Vâlcea","Ramnicu Valcea"],
+  "piatraneamt":["piatraneamt","Piatra Neamț","Piatra Neamt"]
+};
+
+function answerIsCorrect(input, expected){
+  const cleanCountyPrefix = value => {
+    let x=norm(value);
+    if(x.startsWith("judetul")) x=x.slice("judetul".length);
+    else if(x.startsWith("judet")) x=x.slice("judet".length);
+    return x;
+  };
+
+  const a=cleanCountyPrefix(input);
+  const e=cleanCountyPrefix(expected);
+  if(a===e) return true;
+
+  const variants=acceptedAnswers[norm(expected)] || [];
+  return variants.some(v=>cleanCountyPrefix(v)===a);
+}
+
+let features=[], mode="county", score=0, streak=0, count=0, current=null, answered=false, questionQueue=[], completedCounties=new Set();
+
+const $=id=>document.getElementById(id);
+function updateStats(){ $("score").textContent=score; $("streak").textContent=streak; $("count").textContent=count; }
+
+function allFeatureNames(f){
+  if(!f || !f.properties) return [];
+  return Object.values(f.properties)
+    .filter(v => typeof v === "string" || typeof v === "number")
+    .map(v => norm(String(v)))
+    .filter(Boolean);
+}
+
+const featureAliases = {
+  "arges":["arges","argesh"],
+  "bacau":["bacau"],
+  "bistritanasaud":["bistritanasaud","bistritanasaudcounty"],
+  "botosani":["botosani"],
+  "braila":["braila"],
+  "brasov":["brasov"],
+  "bucuresti":["bucuresti","municipiulbucuresti","bucharest","bucurestiilfov"],
+  "buzau":["buzau"],
+  "calarasi":["calarasi"],
+  "carasseverin":["carasseverin","caras-severin"],
+  "cluj":["cluj"],
+  "constanta":["constanta"],
+  "covasna":["covasna"],
+  "dambovita":["dambovita"],
+  "galati":["galati"],
+  "harghita":["harghita"],
+  "ialomita":["ialomita"],
+  "iasi":["iasi"],
+  "ilfov":["ilfov"],
+  "maramures":["maramures"],
+  "mehedinti":["mehedinti"],
+  "mures":["mures"],
+  "neamt":["neamt"],
+  "prahova":["prahova"],
+  "salaj":["salaj"],
+  "satummary":["satumare"],
+  "satumare":["satumare"],
+  "timis":["timis"],
+  "valcea":["valcea"],
+  "vaslui":["vaslui"],
+  "vrancea":["vrancea"]
+};
+
+function featureMatchesCounty(f, countyName){
+  const n=norm(countyName);
+
+  // IMPORTANT: exact matching only. This prevents Mureș from matching Maramureș.
+  const safeAliases = {
+    "bucuresti":["bucuresti","municipiulbucuresti","bucharest"],
+    "arges":["arges"],
+    "bistritanasaud":["bistritanasaud"],
+    "carasseverin":["carasseverin"],
+    "satumare":["satumare"]
+  };
+
+  const wanted = new Set([n, ...(safeAliases[n] || []).map(norm)]);
+  const vals = allFeatureNames(f);
+
+  return vals.some(v => wanted.has(v));
+}
+
+function matchFeature(item){
+  return features.find(f => featureMatchesCounty(f, item.county));
+}
+
+function displayFeatureName(f){
+  if(!f || !f.properties) return "";
+  const preferred=["name","NAME","Nume","NUME","county","County","judet","JUDET","Judet","Denumire","denumire"];
+  for(const k of preferred){
+    if(f.properties[k] != null) return String(f.properties[k]);
+  }
+  return Object.values(f.properties).find(v=>typeof v==="string") || "";
+}
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function buildQuestionQueue(){
+  // Regula principală: într-o rundă fiecare județ poate apărea O SINGURĂ DATĂ,
+  // indiferent dacă întrebarea cere județul, reședința sau ambele.
+  let typeForCounty;
+  if(mode==="county") typeForCounty=()=> "county";
+  else if(mode==="capital") typeForCounty=()=> "capital";
+  else if(mode==="both") typeForCounty=()=> "both";
+  else typeForCounty=()=> Math.random()<0.5 ? "county" : "capital";
+
+  questionQueue=shuffle(
+    counties.map(c=>({item:c,type:typeForCounty()}))
+  );
+}
+
+function setQuestion(){
+  answered=false;
+  $("answer").value="";
+  $("answer2").value="";
+  $("next").disabled=true;
+
+  if(!questionQueue.length){
+    $("question").textContent="Runda s-a terminat! Ai parcurs toate cele 42 de județe.";
+    $("feedback").className="feedback good";
+    $("feedback").textContent=`Scor final: ${score}. Niciun județ nu s-a repetat în această rundă.`;
+    $("check").disabled=true;
+    return;
+  }
+
+  let pick=null;
+  while(questionQueue.length && !pick){
+    const candidate=questionQueue.shift();
+    if(!completedCounties.has(norm(candidate.item.county))) pick=candidate;
+  }
+
+  if(!pick){
+    $("question").textContent="Runda s-a terminat! Ai parcurs toate județele fără repetări.";
+    $("feedback").className="feedback good";
+    $("feedback").textContent=`Scor final: ${score}.`;
+    $("check").disabled=true;
+    return;
+  }
+
+  current=pick.item;
+  current._mixed=pick.type;
+
+  d3.select("#target-marker").remove();
+  features.forEach(x=>x.el?.classed("target",false).classed("wrong",false));
+
+  const f=matchFeature(current);
+
+  // Doar întrebările despre județ au nevoie de evidențiere galbenă.
+  if(pick.type==="county" || pick.type==="both"){
+    if(f?.el){
+      // Safety: a green/completed county must never be turned yellow again.
+      if(f.el.classed("correct")){
+        console.error("County already completed was selected:", current.county);
+        return setQuestion();
+      }
+      f.el.classed("target",true);
+      f.el.attr("fill","#ffdf00").attr("stroke","#111827").attr("stroke-width",5);
+      f.el.raise();
+
+      const node=f.el.node(), svg=d3.select("#map svg");
+      if(node && svg.size()){
+        const box=node.getBBox(), cx=box.x+box.width/2, cy=box.y+box.height/2;
+        const marker=svg.append("g").attr("id","target-marker").style("pointer-events","none");
+        marker.append("circle").attr("cx",cx).attr("cy",cy).attr("r",8)
+          .attr("fill","#facc15").attr("stroke","#7c2d12").attr("stroke-width",3);
+        marker.append("circle").attr("cx",cx).attr("cy",cy).attr("r",14)
+          .attr("fill","none").attr("stroke","#f59e0b").attr("stroke-width",3).attr("opacity",0.85);
+      }
+    }
+    $("question").textContent = pick.type==="both"
+      ? "Scrie județul evidențiat cu GALBEN și reședința lui."
+      : "Ce județ este evidențiat cu GALBEN pe hartă?";
+  } else {
+    $("question").textContent=`Care este reședința județului ${current.county}?`;
+  }
+
+  $("answer2").style.display = pick.type==="both" ? "" : "none";
+  $("answer").placeholder = pick.type==="both" ? "Scrie județul…" : "Scrie răspunsul…";
+
+  $("feedback").className="feedback";
+  $("feedback").textContent="Scrie răspunsul și apasă „Verifică”.";
+  $("answer").focus();
+}
+function showCorrectOnMap(){
+  const f = matchFeature(current);
+  d3.select("#target-marker").remove();
+  features.forEach(x=>x.el?.classed("target",false));
+
+  if(!f?.el) return;
+
+  f.el.classed("correct",true);
+  f.el.attr("fill","#86efac").attr("stroke","#166534").attr("stroke-width",4);
+  f.el.raise();
+
+  const node = f.el.node();
+  const svg = d3.select("#map svg");
+  if(!node || !svg.size()) return;
+
+  const box = node.getBBox();
+  const cx = box.x + box.width/2;
+  const cy = box.y + box.height/2;
+
+  const labelId = "answer-label-" + norm(current.county) + "-" + targetMode();
+  d3.select("#"+labelId).remove();
+  const g = svg.append("g").attr("id",labelId).attr("class","persistent-answer-label").style("pointer-events","none");
+
+  g.append("circle")
+    .attr("cx",cx).attr("cy",cy).attr("r",5)
+    .attr("fill","#166534").attr("stroke","white").attr("stroke-width",2);
+
+  g.append("text")
+    .attr("x",cx).attr("y", targetMode()==="county" ? cy+4 : cy-11)
+    .attr("text-anchor","middle")
+    .attr("class","map-label small")
+    .text(current.county);
+
+  if(targetMode()==="capital" || targetMode()==="both"){
+    g.append("text")
+      .attr("x",cx).attr("y",cy+18)
+      .attr("text-anchor","middle")
+      .attr("class","map-label capital")
+      .text(current.capital);
+  }
+}
+
+function targetMode(){return mode==="mixed" ? current._mixed : mode}
+function submit(){
+  if(answered) return;
+
+  const target=targetMode();
+
+  if(target==="both"){
+    const countyVal=$("answer").value;
+    const capitalVal=$("answer2").value;
+    if(!countyVal.trim() || !capitalVal.trim()) return;
+
+    const countyOk=answerIsCorrect(countyVal,current.county);
+    const capitalOk=answerIsCorrect(capitalVal,current.capital);
+
+    if(countyOk && capitalOk){
+      answered=true;
+      completedCounties.add(norm(current.county));
+      count++; score+=15+Math.min(streak,5)*2; streak++;
+      $("feedback").className="feedback good";
+      $("feedback").innerHTML=`✅ Corect! Județ: <b>${current.county}</b> · Reședință: <b>${current.capital}</b>.`;
+      showCorrectOnMap();
+      $("next").disabled=true; updateStats();
+      setTimeout(()=>setQuestion(), 1200);
+    }else{
+      streak=0; updateStats();
+      $("feedback").className="feedback bad";
+      if(!countyOk && !capitalOk){
+        $("feedback").textContent="❌ Nici județul, nici reședința nu sunt corecte. Mai încearcă.";
+      } else if(!countyOk){
+        $("feedback").textContent="❌ Reședința este corectă, dar județul nu. Mai încearcă.";
+      } else {
+        $("feedback").textContent="❌ Județul este corect, dar reședința nu. Mai încearcă.";
+      }
+    }
+    return;
+  }
+
+  const val=norm($("answer").value);
+  if(!val) return;
+
+  const expected=target==="county"?current.county:current.capital;
+  if(answerIsCorrect($("answer").value, expected)){
+    answered=true;
+    completedCounties.add(norm(current.county));
+    count++; score+=10+Math.min(streak,5)*2; streak++;
+    $("feedback").className="feedback good";
+    $("feedback").innerHTML = target==="county"
+      ? `✅ Corect! Județul este <b>${current.county}</b>.`
+      : `✅ Corect! Județ: <b>${current.county}</b> · Reședință: <b>${current.capital}</b>.`;
+    showCorrectOnMap();
+    $("next").disabled=true; updateStats();
+    setTimeout(()=>setQuestion(), 1200);
+  }else{
+    streak=0; updateStats();
+    $("feedback").className="feedback bad";
+    $("feedback").innerHTML=`❌ Nu încă. Mai încearcă! <span style="opacity:.8">Indiciu: ${target==="county" ? "numele județului începe cu „"+current.county[0]+"…”" : "reședința începe cu „"+current.capital[0]+"…”"}.</span>`;
+    $("answer").select();
+  }
+}
+function reset(){
+  score=0;streak=0;count=0;completedCounties=new Set();$("check").disabled=false;buildQuestionQueue();updateStats();
+  d3.selectAll(".persistent-answer-label").remove();
+  d3.select("#target-marker").remove();
+  features.forEach(x=>x.el?.classed("correct wrong target",false)
+    .attr("fill",null).attr("stroke",null).attr("stroke-width",null));
+  setQuestion();
+}
+$("check").onclick=submit;
+$("next").onclick=setQuestion;
+$("restart").onclick=reset;
+$("answer").addEventListener("keydown",e=>{if(e.key==="Enter") submit()});
+$("answer2").addEventListener("keydown",e=>{if(e.key==="Enter") submit()});
+document.querySelectorAll(".modebtn").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".modebtn").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active"); mode=b.dataset.mode; reset();
+});
+
+async function loadMap(){
+  try{
+    const raw=await fetch(DATA_URL).then(r=>{if(!r.ok)throw Error("Nu s-a putut încărca harta");return r.json()});
+    let geo=raw;
+    if(raw.type==="Topology"){
+      const obj=raw.objects[Object.keys(raw.objects)[0]];
+      geo=topojson.feature(raw,obj);
+    }
+    features=geo.features || [];
+    const box=$("map"), w=box.clientWidth, h=Math.max(420,box.clientHeight);
+    const svg=d3.select("#map").append("svg").attr("viewBox",`0 0 ${w} ${h}`);
+    const projection=d3.geoMercator().fitSize([w-24,h-24],geo);
+    const path=d3.geoPath(projection);
+    const paths=svg.append("g").selectAll("path").data(features).join("path")
+      .attr("class","county").attr("d",path)
+      .on("click",(e,f)=>{
+        if(!current || answered) return;
+        if(featureMatchesCounty(f,current.county)){
+          $("answer").value=current.county; submit();
+        } else {
+          $("feedback").className="feedback bad";
+          $("feedback").textContent="❌ Ai apăsat pe alt județ. Județul cerut este evidențiat cu galben.";
+        }
+      });
+    features.forEach((f,i)=>f.el=d3.select(paths.nodes()[i]));
+    $("loading").remove();
+    buildQuestionQueue();
+    setQuestion();
+  }catch(err){
+    $("loading").innerHTML="Nu am putut încărca harta. Verifică conexiunea la internet și reîncarcă pagina.";
+    console.error(err);
+  }
+}
+loadMap();
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
+}
+</script>
+<!-- topojson-client is loaded only if the downloaded map happens to be TopoJSON -->
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+</body>
+</html>
