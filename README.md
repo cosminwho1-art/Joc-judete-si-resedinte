@@ -16,14 +16,7 @@ Jocul folosește D3.js și harta GeoJSON de pe internet la prima deschidere. Ser
 În terminal, din folderul proiectului, poți porni:
 
 ```bash
-python -m http.server 8000
+(https://cosminwho1-art.github.io/Joc-judete-si-resedinte/)
 ```
 
-Apoi deschide în browser `http://localhost:8000`.
-
-## Publicare pe GitHub Pages
-
-1. Creează un repository GitHub și încarcă fișierele din acest folder.
-2. În repository, deschide **Settings → Pages**.
-3. Alege ramura `main` și folderul `/ (root)`, apoi apasă **Save**.
-4. Deschide pe telefon adresa de forma `https://utilizator.github.io/nume-repository/`.
+Apoi deschide în browser `[ht](https://cosminwho1-art.github.io/Joc-judete-si-resedinte/)`.
