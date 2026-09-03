@@ -16,7 +16,7 @@ Jocul folosește D3.js și harta GeoJSON de pe internet la prima deschidere. Ser
 În terminal, din folderul proiectului, poți porni:
 
 ```bash
-https://cosminwho1-art.github.io/Joc-judete-si-resedinte
+<a https://cosminwho1-art.github.io/Joc-judete-si-resedinte/a>
 ```
 
 Apoi deschide în browser `https://cosminwho1-art.github.io/Joc-judete-si-resedinte`.
